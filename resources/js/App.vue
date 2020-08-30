@@ -37,6 +37,7 @@ import Input from './components/Input'
 import TodoItem from './components/TodoItem'
 import Footer from './components/Footer'
 import State from './constants/state'
+
 export default {
   name: 'App',
   data () {
@@ -54,32 +55,37 @@ export default {
   },
   methods: {
     handleAddItem (data) {
-      let url = '/api/todo'
+      let url = '/todo'
       this.handleAjaxCommon(url, 'POST', data)
     },
     handleEditItem (data) {
       this.editTodo = data.editTodo
       if (data.action === 'edited') {
         let id = data.todo.id
-        let url = `/api/todo/${id}`
+        let url = `/todo/${id}`
         this.handleAjaxCommon(url, 'PUT', data.todo)
       }
     },
     handleRemoveItem (data) {
       let id = data.todo.id
-      let url = `/api/todo/${id}`
+      let url = `/todo/${id}`
       this.handleAjaxCommon(url, 'DELETE', data.todo)
     },
     handleDoneItem (data) {
       let id = data.todo.id
-      let url = `/api/todo/${id}`
+      let url = `/todo/${id}`
       data.todo.state = !data.todo.state
       this.handleAjaxCommon(url, 'PUT', data.todo)
     },
     handleTickAll () {
-      var state = this.listTodos.filter(item => item.state === false).length > 0
+      let state = this.listTodos.filter(item => item.state === false).length > 0
 
-      this.listTodos.map(item => { item.state = state })
+      var ids = []
+      for (var item of this.listTodos) {
+        ids.push({id: item.id, state: state})
+      }
+      let url = `/todo/tick-all`
+      this.handleAjaxCommon(url, 'PUT', ids)
     },
     handleChangeFilter (data) {
       this.state = data.type
@@ -96,7 +102,7 @@ export default {
     fetchTodoList (pageUrl) {
       let state = this.state || State.ALL
       if (pageUrl == null) {
-        pageUrl = ('/api/todo' + `?state=${state}`)
+        pageUrl = ('/todo' + `?state=${state}`)
       } else {
         pageUrl = (pageUrl + `&state=${state}`)
       }
@@ -105,7 +111,6 @@ export default {
         .then(
           res => {
             let todos = res.data
-            console.log(res)
             todos.map(item => {
               item.state = Boolean(item.state)
             })
@@ -126,12 +131,15 @@ export default {
       fetch(url, {
         method: method,
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+          'X-Requested-With': 'XMLHttpRequest'
         },
         body: JSON.stringify(data)
       }).then(response => response.json())
         .then(data => {
           this.fetchTodoList()
+          this.$toasted.success(data.message)
         })
         .catch((error) => {
           alert(`Error: ${error}`)

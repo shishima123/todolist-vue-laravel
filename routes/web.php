@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,3 +15,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', 'TodoController@index')->name('todo.index');
+Route::group(['namespace' => 'Api'], function () {
+    Route::put('todo/tick-all', 'TodoController@tickAll')->name('todo-tick-all');
+    Route::apiResource('todo', 'TodoController')->except('show');
+});
+Auth::routes();

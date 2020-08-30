@@ -18,7 +18,3 @@ use Illuminate\Support\Facades\Route;
 //    return $request->user();
 //});
 
-Route::group(['namespace' => 'Api'], function () {
-    Route::apiResource('todo', 'TodoController')->except('show');
-});
-

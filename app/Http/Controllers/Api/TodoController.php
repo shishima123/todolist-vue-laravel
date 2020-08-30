@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\Todo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class TodoController extends ApiController
 {
@@ -20,7 +22,7 @@ class TodoController extends ApiController
     public function index(Request $request)
     {
         $state = $request->get('state', 'all');
-        $todo = Todo::orderByDesc('created_at');
+        $todo = Todo::orderByDesc('created_at')->where('user_id', Auth::user()->id);
 
         if ($state != 'all') {
             $todo = $todo->where('state', self::STATE[$state]);
@@ -38,7 +40,7 @@ class TodoController extends ApiController
     {
         try {
             $input = $request->all();
-            $input['user_id'] = 1;
+            $input['user_id'] = Auth::user()->id;
             Todo::create($input);
             return $this->successResponse('Store Successfully');
         } catch (\Exception $e) {
@@ -75,6 +77,28 @@ class TodoController extends ApiController
         try {
             $todo->delete();
             return $this->successResponse('Delete Successfully');
+        } catch (\Exception $e) {
+            return $this->errorResponse('Something went wrong', 400);
+        }
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return mixed
+     */
+    public function tickAll(Request $request)
+    {
+        $inputs = $request->all();
+
+        try {
+            DB::transaction(function () use ($inputs) {
+                foreach ($inputs as $input) {
+                    Todo::findOrFail($input['id'])->fill($input)->save();
+                }
+            });
+            return $this->successResponse('Update Successfully');
         } catch (\Exception $e) {
             return $this->errorResponse('Something went wrong', 400);
         }

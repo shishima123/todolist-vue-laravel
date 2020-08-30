@@ -1,5 +1,5 @@
 <template>
-    <nav class="d-flex justify-content-end">
+    <nav class="d-flex justify-content-end mt-3">
         <ul class="pagination mb-0">
             <li class="page-item" :class="{ disabled: pagination.prev_page_url == null}"><a class="page-link" href="#" @click="handlePagination(pagination.prev_page_url)">Previous</a></li>
             <li class="page-item disabled"><a class="page-link" href="#">{{ pagination.current_page }} / {{ pagination.last_page}}</a></li>
